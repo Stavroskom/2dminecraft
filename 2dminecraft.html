@@ -1,0 +1,579 @@
+<-- made by Σταύρος -!>
+<html>
+ <head></head> 
+ <body> 
+  <div id="forward" onclick="gf()">
+    —-&gt; 
+  </div> 
+  <div id="back" onclick="gb()" up>
+    &lt;-— 
+  </div> 
+  <div id="jump" onclick="j()">
+    ^ 
+  </div> 
+  <div id="mine" onclick="mining(player,blockinf)">
+    mine 
+  </div> 
+  <div id = "tpspawn" onclick="tpspawn()">
+  tp to spawn
+  </div>
+  <div id ="buildm" onclick="buildm()">
+  build mode: off
+  </div>
+  <div id="place" onclick="construct()">place</div>
+  <style>
+body{
+background-color:black;
+}
+#cnvs{
+  height:250;
+  width:500;
+  background-color:black;
+  position:fixed;
+  top:0;
+  left:0;
+}
+#buildm{
+height:50;
+width:50;
+background-color:grey;
+position:fixed;
+top:350;
+left:50;
+color:yellow;
+}
+#tpspawn{
+height:50;
+width:50;
+background-color:grey;
+position:fixed;
+top:300;
+left:300;
+color:yellow;
+}
+#mine{
+height:50;
+width:50;
+background-color:grey;
+position:fixed;
+top:300;
+left:50;
+color:yellow;
+}
+#place{
+height:50;
+width:50;
+background-color:grey;
+position:fixed;
+top:300;
+left:200;
+color:yellow;
+}
+#jump{
+height:50;
+width:50;
+background-color:grey;
+position:fixed;
+top:250;
+left:50;
+color:yellow;
+}
+#back{
+    height:50;
+    width:50;
+    background-color:grey;
+    position:fixed;
+    top:300;
+    left:0;
+    color:yellow;
+}
+#forward{
+    height:50;
+    width:50;
+    background-color:grey;
+    position:fixed;
+    top:300;
+    left:100;
+    color:yellow;
+}
+</style> 
+  <canvas id="cnvs"></canvas> 
+  <script>
+/*const steve =new Image()
+steve.src ="//storage/emulated/0/steve4.png"*/
+var cnvs = document.getElementById("cnvs")
+var ctx = cnvs.getContext("2d")
+window.onresize=function(){
+    cnvs.style.width=window.innerWidth
+    cnvs.style.height=window.innerHeight/3.3
+}
+var interval =setInterval(start,50)
+var counter=0
+var buildb = document.getElementById("buildm")
+var forward = false
+var back = false
+var enemies =[]
+var jump =false
+var ja = true
+var xt=true
+var yt=true
+var i =0
+var r =0
+var arain=true
+var tps = false
+var gravity = 1
+//var timer = 100
+var c =0
+var ac = true
+var rain=[]
+var act = true
+var ga=true
+var bb =[]
+var build = false
+var pb =[]
+var k =1
+var rain=[]
+var t =0
+var yy=0
+var blockinf={
+width:10,
+height:10,
+mintop:50,
+}
+var player={
+name:"player",
+color:""+prompt("enter color"),
+width:10,
+height:20,
+x:0,
+y:30
+}
+var dirt = {
+name: "dirt",
+color:"brown",
+width:10,
+height:10,
+x:0,
+y:50,
+rd:2
+}
+var stone ={
+name:"stone",
+color:"grey",
+width:10,
+height:10,
+x:0,
+y:0,
+rd:3
+}
+var andesite ={
+name: "andesite",
+color:"white",
+width:10,
+height:10,
+x:0,
+y:0,
+rd:2
+}
+var it = 0
+/*function makemobs(){
+if(enemies.length() <=3){
+enemies[t]={name:"player",
+color:player.color,
+width:10,
+height:20,
+x:5,
+y:30
+}
+}
+ctx.fillrect(enemies[t].x,enemies[t].y,enemies[t].width,enemies[t].height)
+}*/
+function timer(){
+    counter+=1
+    if(counter == 100000){
+        arain=true
+    }
+}
+var bt = blockinf.mintop - blockinf.height*2
+pb[0]={x:-50,y:-50,width:0,height:0}
+function makeitrain(){
+if(it <=100){
+rain[it]={x:(Math.round(Math.random()*10))*Math.round(Math.random()*60),y:0,width:2,height:1,color:"blue"}
+it +=1
+}
+}
+var ac = 0
+function raining(){
+for(let tr=0;tr<it;tr+=1){
+ctx.fillStyle=rain[tr].color
+if (rain[tr].y + rain[tr].height < blockinf.mintop && arain==true){
+rain[tr].y +=gravity
+ctx.fillRect(rain[tr].x,rain[tr].y,rain[tr].width,rain[tr].height)
+ctx.clearRect(rain[tr].x,rain[tr].y-20,rain[tr].width,rain[tr].height)
+}
+else if(rain[tr].y + rain[tr].height == blockinf.mintop){
+if(ac == 500){
+arain=false
+counter=0
+ctx.clearRect(0,0,cnvs.width,50)
+}
+ctx.clearRect(rain[tr].x,rain[tr].y+1,rain[tr].width,rain[tr].height-21)
+rain[tr].y=0
+ac +=1
+}
+}
+}
+function gforce(body){
+for(lh=0; lh < k ;lh+=1){
+if (body.x == pb[lh].x && pb[lh].y == body.y + body.height){
+ga = false
+break
+}
+else{
+ga = true
+}
+}
+if (build == false && ga == true){
+  if(body.y < bt ){
+  body.y += gravity
+  }
+  ctx.clearRect(body.x,body.y-2,body.width,body.height-18)
+  for(let l =0;l<= i-1;l++){
+ //alert(bb[l].x == player.x && bb[l].y >= player.y + player.height)// + player.height)
+  if (bb[l].x == player.x && bb[l].y >= player.y +player.height){
+  if (bt <= bb[l].y &&( body.y + body.height -1) >= 40){
+  body.y += gravity
+  ctx.clearRect(body.x,body.y -body.height/10,body.width,body.height -18)
+  }
+  else if(bt > bb[l].y && yt ==true){
+  player.y -=5
+  yt == false
+  }
+  }
+  }
+  }
+  }
+function mt(block1,block2){
+block2.y = block1.height * block1.rd + block1.y
+block2.y += block2.height
+}
+mt(dirt,stone)
+mt(stone,andesite)
+function construct(){
+pb[k]={x:player.x,y:player.y+player.height,width:blockinf.width,height:blockinf.height}
+ctx.fillRect(pb[k].x,pb[k].y,pb[k].width,pb[k].height)
+k += 1
+}
+function make(block){
+ctx.fillStyle = block.color
+ctx.fillRect(block.x,block.y,block.width,block.height)
+ if (block.x <= cnvs.width){
+  block.x += block.width
+ }
+else if (block.y <= 250 && block.rd >= 1){
+ block.x -= block.x
+ block.y += block.height
+ block.rd -= 1
+}
+}
+function buildm(){
+if (build == false){
+build = true
+buildb.innerHTML="build mode: on"
+}
+else if (build == true){
+build = false
+buildb.innerHTML="build mode: off"
+}
+}
+function tpspawn(){
+tps = true
+}
+function j(){
+ jump = true
+}
+function gb(){
+ back = true
+}
+function gf(){
+ forward = true
+ c+=2
+}
+function mining(players,block){
+ctx.clearRect(players.x,players.y+player.height,block.width,block.height)
+bb[i] = {x:players.x,y:players.y + players.height +block.height}
+i +=1
+//alert(bb[i-1].x)
+}
+function control(players,block){
+if (players.name == "player"){
+ ctx.fillStyle = players.color
+ if (tps == true){
+ ctx.clearRect(players.x,players.y,players.width,players.height)
+ players.y = 30
+ players.x = 0
+ tps = false
+ }
+if(forward == true){ 
+ try{
+ let abo = false
+ let abt = false
+ act = true
+ xt = true
+ for (let lt =0;lt< i;lt +=1){
+ if(bb[lt].x  == players.x +10 && players.y + players.height-1 <= bb[lt].y + blockinf.height && players.y +players.height -1 <= bb[lt].y && act == true && players.y + players.height > 50){
+ /*players.x +=10
+ ctx.clearRect(players.x-10,players.y,players.width,players.height)
+ */
+ abo = true
+ for(let lh=0;lh <k;lh +=1){
+ if(players.x +10 == pb[lh].x && pb[lh].y < players.y + players.height && pb[lh].y + blockinf.height > players.y ){
+ xt = false
+ abt = false
+ //alert(6)
+ break
+ //players.x +=10
+ /*if(lt == 0){
+ players.x +=10
+ alert(3)
+ }*/
+ }
+ 
+ else if (lh == k-1){
+ //abt = true
+ //alert(9)
+ players.x += 10
+ ctx.clearRect(players.x-10,players.y,players.width,players.height)
+ act = false
+ }
+ }
+ }
+ //alert(bb[lt].y+","+(players.y+ players.height -1))
+ if (bb[lt].x == players.x&& bb[lt].y >= (players.y + players.height -1)&& players.y + players.height >50){
+ //players.x +=10
+ //alert(1)
+ abo = false
+ //ctx.clearRect(players.x-10,players.y,players.width,players.height)
+ }
+ else if (bb[lt].y != (players.y + players.height -1) && (players.y + players.height -1) < 50 && xt == true){
+ //players.x -= 10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ xt =false
+ abo = true
+ //alert(2)
+ break
+ }
+ /*else if (players.x - 10 == bb[lt].x && (players.y + players.height -1) <= bb[lt].y && players.y + players.height >=50){//&& ct <= 2){
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ alert("no")
+ break
+ }*/
+ }
+ for(let lh=0;lh < k;lh +=1){
+ if(players.x +10 == pb[lh].x && pb[lh].y < players.y + players.height && pb[lh].y + blockinf.height > players.y){
+ xt = false
+ abt = false
+ //alert(6)
+ break
+ //players.x +=10
+ /*if(lt == 0){
+ players.x +=10
+ alert(3)
+ }*/
+ 
+ }
+ else if (lh == k-1 && players.y + players.height <= 50){
+ abt = true
+ //alert(9)
+ }
+ }
+ if (i == 0 && k == 0){
+ players.x += 10
+ //alert(5)
+ ctx.clearRect(players.x-10,players.y,players.width,players.height)
+ }
+ else if(abo == true && k ==0){
+ players.x +=10
+ ctx.clearRect(players.x -10,players.y,players.width,players.height)
+ }
+ else if(abt == true && i ==0){
+ players.x +=10
+ ctx.clearRect(players.x -10,players.y,players.width,players.height)
+ }
+ if (abt ==true && abo == true){
+ players.x +=10
+ ctx.clearRect(players.x-10,players.y,players.width,players.height)
+ }
+ }
+  catch{
+  players.x += 10
+  back =false
+  alert(7)
+  ctx.clearRect(players.x-10,players.y,players.width,players.height)
+  }
+  forward = false
+ }
+ //alert(!(players.x != bb[i-1].x && players.y + players.height != bb[i-1].y))
+ if(back == true){ 
+ try{
+ let abo = false
+ let abt = false
+ ac = true
+ xt = true
+ for (let lt=0;lt <= i-1;lt +=1){
+ if(bb[lt].x  == players.x-10 && players.y + players.height-1 <= bb[lt].y + blockinf.height && players.y + players.height-1 <= bb[lt].y && ac == true && players.y + players.height > 50){
+ /*players.x-=10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ */
+ abo = true
+ for(let lh=0;lh <k;lh +=1){
+ if(players.x -10 == pb[lh].x && pb[lh].y < players.y + players.height && pb[lh].y + blockinf.height > players.y ){
+ xt = false
+ abt = false
+ //alert(6)
+ break
+ //players.x +=10
+ /*if(lt == 0){
+ players.x +=10
+ alert(3)
+ }*/
+ }
+ 
+ else if (lh == k-1){
+ //abt = true
+ //alert(9)
+ players.x -= 10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ ac = false
+ }
+ }
+ }
+ //alert(bb[lt].y+","+(players.y+ players.height -1))
+ if (bb[lt].x == players.x && bb[lt].y >= (players.y + players.height -1)&& players.y + players.height > 50){
+ //players.x -=10
+ abo = false
+ //ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ }
+ else if (bb[lt].y != (players.y + players.height -1) && (players.y + players.height -1) < 50 && xt == true){
+ //players.x -= 10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ xt =false
+ abo = true
+ //alert(2)
+ break
+ }
+ /*else if (players.x - 10 == bb[lt].x && (players.y + players.height -1) <= bb[lt].y && players.y + players.height >=50){//&& ct <= 2){
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ alert("no")
+ break
+ }*/
+ }
+ for(let lh=0;lh < k;lh +=1){
+ if(players.x -10 == pb[lh].x && pb[lh].y < players.y + players.height && pb[lh].y + blockinf.height > players.y ){
+ xt = false
+ abt = false
+ //alert(6)
+ break
+ //players.x +=10
+ /*if(lt == 0){
+ players.x +=10
+ alert(3)
+ }*/
+ }
+ 
+ else if (lh == k-1){
+ abt = true
+ //alert(9)
+ }
+ }
+ if (i == 0 && k == 0){
+ players.x -= 10
+ //alert(5)
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ }
+ else if(abo == true && k ==0){
+ players.x -=10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ }
+ else if(abt == true && i ==0){
+ players.x -=10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ }
+ if (abt ==true && abo == true){
+ players.x -=10
+ ctx.clearRect(players.x+10,players.y,players.width,players.height)
+ }
+ }
+  catch{
+  players.x -= 10
+  back =false
+  //alert(7)
+  ctx.clearRect(players.x+10,players.y,players.width,players.height)
+  }
+  back = false
+ }
+if (jump == true){
+ja = true
+for (let lh =0;lh < k;lh +=1){
+if(pb[lh].x == players.x && players.y < pb[lh].y + blockinf.height *2 && players.y + players.height > pb[lh].y){
+ja = false
+//alert(pb[lh].y + blockinf.height +","+players.y)
+}
+}
+if(ja == true){
+if (build == false){
+players.y -= 15
+ctx.clearRect(players.x,players.y + 20,players.width,players.height-5)
+}
+else{
+players.y -= 10
+ctx.clearRect(players.x,players.y + 15,players.width,players.height-5)
+}
+ jump = false
+}
+}
+ctx.fillRect(players.x,players.y,players.width,players.height)
+jump = false
+}
+if(players.name == "monster"){
+if(player.x > players.x){
+players.x += 10
+if(player.x < players.x){
+players.x -= 10
+}
+}
+}
+}
+function fill(block){
+for (let lh=0; lh<k;lh+=1){
+ctx.fillRect(block[lh].x,block[lh].y,block[lh].width,block[lh].height)
+}
+for(let som=0;som > blockinf.width;som+=10){
+ctx.fillRect(som,blockinf.mintop +yy,blockinf.width,bockinf.height)
+if(som ==10){
+yy+=1
+}
+}
+}
+/*function raining(){
+rain[r]={x:Math.random(),y:0,width:30,height:10}
+ctx.fillStyle="blue"
+ctx.fillRect(rain.x,rain.y,rain.width,rain.height)
+rain.y += g
+r+=1
+}*/
+function start(){
+make(dirt)
+make(stone)
+make(andesite)
+control(player,dirt)
+control(enemies,blockinf)
+gforce(player)
+fill(pb)
+makeitrain()
+raining()
+timer()
+}
+</script> 
+ </body>
+</html>
